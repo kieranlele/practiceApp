@@ -1,0 +1,15 @@
+Hey guys, it's a good idea to read this just to understand which files in this folder you should pay attention to.
+
+the main file is App.js. It provides a demonstration of one of the applications of React Context
+as well as a use of the useReducer and useMemo hooks. I'm iffy on those, so I'd check the docs for more info, but
+anyway, useReducer works like useState, except the state variables tend to depend on their previous values. Honestly, I'm 
+not sure what useMemo is good for. I'm just using it as a way to pass functions to Context, but I think I could do that without it?
+
+I moved some of the App.js methods to authMethods to improve readability. You can find authMethods in /src/firebase.
+
+Configuration information for both the app and our firebase project is in /serc/firebase/config.js.
+
+/screens contains stylesheets and screen js files for each of the major screens in the project. I'd go through each of those to see 
+how they use Context to interact with each other.
+ 
+ I'm happy to go over the code and what I learned while writing it. 
