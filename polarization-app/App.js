@@ -12,7 +12,7 @@ To allow for offline use of some features, an authentication token can be stored
 The user authentication I use in this app isn't real. It's more of an exercise in passing props around than anything else.
 */
 
-export default function App() { 
+ export default function App() { 
   /*
   My first deviation from good code standards occurs here, I think. All navigators should be created in the App.js file. 
   I created the StartScreenNavigator in a different file. 

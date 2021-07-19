@@ -14,7 +14,7 @@ export const RegistrationScreen = function({navigation, route}){
   const credentialList = route.params.validCredentials; 
   const [newName, setNewName] = useState();
   const [newPassword, setNewPassword] = useState(); // I think its fine having newName and newPassword as state variables. 
-  const [validCredentials, setValidCredentials] = useState(credentialList);
+  const [validCredentials, setValidCredentials] = useState(credentialList); 
   let validated;
 
   const  handleUsernameInput = (username) =>{ // stores the registered username in a state variable until we're ready to use it
@@ -110,7 +110,7 @@ const EntryField = function(props){
 
             Then, login credentials could be verified after a button is pressed at the end. 
             */
-            style = {styles.textInputBox} onSubmitEditing = { props.handler} ></TextInput>
+            style = {styles.textInputBox} onSubmitEditing = {props.handler} ></TextInput>
         
     </View>
   )
