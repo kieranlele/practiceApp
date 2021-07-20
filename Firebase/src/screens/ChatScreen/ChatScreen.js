@@ -19,29 +19,27 @@ I don't want to get to fancy with this. I just want to figure out a simple chat 
     4a. Conversation collection => conversation documents: {fields: author1Id, author2Id, createdAt, numMessages} 
     => message Documents: {fields: authorID, createdAt, text}
 */
-export default function ChatScreen(){
+export default function ChatScreen({navigation, route}){
 const [messageText, setMessageText] = useState('');
 const [messages, setMessages] = useState([]);
-const {firstUserID, secondUserID} = useContext(ChatContext); //this should be sorted alphabetically when it shows up here. 
 const user = useContext(UserContext);
 const userID = user.id;
 
-conversationRef = firebase.firestore().collection('Conversations').where("firstAuthorID", "==", firstUserID)
-    .where("secondAuthorID", "==", secondUserID);
-messageRef = conversationRef.collection('Messages');
+const conversationRef = firebase.firestore().collection('Conversations'); 
+const messageRef = conversationRef.doc(route.params.conversationID).collection('Messages');
 
 
 useEffect(()=>{
-    messageRef.orderBy('CreatedAt', desc)
+    messageRef.orderBy('CreatedAt', 'desc') // this section is very similar to HomeScreen's code.
        .onSnapshot(
            querySnapshot => { 
-                messages = []
-               querySnapshot.foreach(doc => { 
+               let  newMessages = []
+               querySnapshot.forEach(doc => { 
                     let message  = doc.data
                     message.id = doc.id
-                    messages.push(message)
+                    newMessages.push(message)
                })
-                setMessages(messages)
+                setMessages(newMessages)
            }, error => {
                alert(error);
            }
@@ -56,7 +54,7 @@ const onAddButtonPress =()=>{
             authorID: userID, //use context to get the userId here
             createdAt: timestamp,
         }
-    }
+    
     messageRef
         .add(data)
         .then(_doc => {
@@ -66,9 +64,11 @@ const onAddButtonPress =()=>{
         .catch(error => {
             alert(error);
         });
+    }
 }
 
-const renderEntity = ({item}) => { //this is called to render each element in the entities list
+const renderMessage = ({item}) => { //this is called to render each element in the entities list. One thing I want to add
+                                    //is an indicator as to who sent which message. I was thinking making user sent messages a different color.
     return (
         <View style={styles.entityContainer}>
             <Text style={styles.entityText}> 
@@ -85,8 +85,8 @@ return (
                     style={styles.input}
                     placeholder=''
                     placeholderTextColor="#aaaaaa"
-                    onChangeText={(text) => setEntityText(text)}
-                    value={entityText}
+                    onChangeText={(text) => setMessageText(text)}
+                    value={messageText}
                     underlineColorAndroid="transparent"
                     autoCapitalize="none"
                 />
@@ -94,11 +94,11 @@ return (
                     <Text style={styles.buttonText}>Send</Text>
                 </TouchableOpacity>
             </View>
-              { entities && (
+              { messages && (
                 <View style={styles.listContainer}>
                     <FlatList //neeeded to render each element in the list. We probably could have used a for loop as well. 
-                        data={entities}
-                        renderItem={renderEntity}
+                        data={messages}
+                        renderItem={renderMessage}
                         keyExtractor={(item) => item.id}
                         removeClippedSubviews={true}
                     />

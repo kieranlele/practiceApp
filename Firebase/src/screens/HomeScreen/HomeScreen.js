@@ -81,10 +81,10 @@ export default function HomeScreen(props) {
                 <TouchableOpacity style={styles.button} onPress={onAddButtonPress}>
                     <Text style={styles.buttonText}>Add</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style = {styles.button} onPress = {signOut}>
+                <TouchableOpacity style = {styles.button} onPress = {signOut}> {/*I'm not sure if the signOut button was in the last commit*/}
                     <Text style = {styles.buttonText}>Sign Out</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style = {styles.button} onPress = {()=> props.navigation.navigate('ChatLoadingScreen')}>
+                <TouchableOpacity style = {styles.button} onPress = {()=> props.navigation.navigate('ChatLoadingScreen')}> {/*navigates to the new section of code*/}
                     <Text style = {styles.buttonText}>Go To Chat</Text>
                 </TouchableOpacity>
             </View>

@@ -119,7 +119,7 @@ export default function App({ navigation }) {
       //The provider enables us to adjust the state variables of App.js from inside the different screens for the navigator auth-flow.
       <AuthContext.Provider value = {authContext}>
         <UserContext.Provider value = {user}>
-        <ChatContext.Provider>
+        <ChatContext.Provider> {/*I don't use this, so it is probably safe to delete*/}
          <NavigationContainer>
             <Stack.Navigator>
                 { user ? ( // The below {props} syntax made little sense to me. Refer to https://reactnavigation.org/docs/hello-react-navigation/#passing-additional-props
