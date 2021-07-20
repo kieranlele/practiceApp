@@ -13,3 +13,6 @@ Configuration information for both the app and our firebase project is in /serc/
 how they use Context to interact with each other.
  
  I'm happy to go over the code and what I learned while writing it. 
+
+
+ Next Steps: Implement a chat feature where two users can communicate at the same time.

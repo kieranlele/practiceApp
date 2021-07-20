@@ -3,13 +3,12 @@ import {View, Image} from 'react-native';
 import React, { useEffect, useState,useReducer } from 'react'
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
-import { LoginScreen, HomeScreen, RegistrationScreen } from './src/screens'
+import { LoginScreen, HomeScreen, RegistrationScreen, ChatLoadingScreen, ChatScreen } from './src/screens'
 import {decode, encode} from 'base-64'
 import { firebase } from './src/firebase/config';
 import * as SplashScreen from 'expo-splash-screen';
-import { AuthContext } from './src/AuthContext';
+import { AuthContext, UserContext,ChatContext } from './src/contexts/Context';
 import * as authMethods from './src/firebase/authMethods'
-//import * as SecureStore from 'expo-secure-store';
 if (!global.btoa) {  global.btoa = encode } // no clue what these do. Encrypt info sent to firebase?
 if (!global.atob) { global.atob = decode }
 
@@ -18,8 +17,7 @@ const Stack = createStackNavigator();
 //I'll try to understand this code, taken from the docs.
 
 export default function App({ navigation }) {
-  
-    console.log("You made it in the app!");
+    
     const [user, setUser] = useState(null);
     const [state, dispatch] = useReducer(  //useReducer takes two parameters, a reducer (defined in our program) and an initial state
       //useReducer is preferable when the next state depends on the previous one or when state logic is complex
@@ -50,8 +48,8 @@ export default function App({ navigation }) {
       }
     );
     const authContext = React.useMemo(//https://blog.agney.dev/useMemo-inside-context/ I found this in the auth-flow docs, but 
-      //I don't understand how useMemo creates context. I don't really understand how useMemo works right now. I think it just does 
-      //difficult calculations once whenever something changes rather than doing them on every render. 
+      //useMemo does difficult calculations once whenever something changes rather than doing them on every render. 
+      //we pass the memoized functions to other components as context
       () => ({
         signIn: async (email,password) => {
           // In a production app, we need to send some data (usually username, password) to server and get a token
@@ -119,22 +117,31 @@ export default function App({ navigation }) {
     };
     return (
       //The provider enables us to adjust the state variables of App.js from inside the different screens for the navigator auth-flow.
-       <AuthContext.Provider value = {authContext}>
-      <NavigationContainer>
-        <Stack.Navigator>
-          { user ? ( // The below {props} syntax made little sense to me. Refer to https://reactnavigation.org/docs/hello-react-navigation/#passing-additional-props
+      <AuthContext.Provider value = {authContext}>
+        <UserContext.Provider value = {user}>
+        <ChatContext.Provider>
+         <NavigationContainer>
+            <Stack.Navigator>
+                { user ? ( // The below {props} syntax made little sense to me. Refer to https://reactnavigation.org/docs/hello-react-navigation/#passing-additional-props
                       // Essentially, we just add another prop to be passed along with navigation and route  
-            <Stack.Screen name="Home">
-              {props => <HomeScreen{...props} extraData={user} />} 
-            </Stack.Screen>
-          ) : ( // Note that the {user ? (code) :(other code) is a ternary operator. I think it saves the user from having to repeat logins}
-            <>
-              <Stack.Screen name="Login" component={LoginScreen} />
-              <Stack.Screen name="Registration" component={RegistrationScreen} />
-            </>
-          )}
-        </Stack.Navigator>
-      </NavigationContainer>
+                   <>
+                  <Stack.Screen name="Home" component = {HomeScreen}/> 
+                  {/* {props => <HomeScreen{...props} extraData={user} />}  </Stack.Screen>  */}
+                   {/*Consider nesting a feed navigator in here */}
+                    <Stack.Screen name = "ChatLoadingScreen" component = {ChatLoadingScreen} />
+                    <Stack.Screen name = "Chat Screen" component = {ChatScreen} />
+                  
+                  </>
+                ) : ( // Note that the {user ? (code) :(other code) is a ternary operator. I think it saves the user from having to repeat logins}
+                <>
+                  <Stack.Screen name="Login" component={LoginScreen} />
+                  <Stack.Screen name="Registration" component={RegistrationScreen} />
+                </>
+                 )}
+             </Stack.Navigator>
+          </NavigationContainer>
+          </ChatContext.Provider>
+        </UserContext.Provider>
       </AuthContext.Provider>
     );
   }
