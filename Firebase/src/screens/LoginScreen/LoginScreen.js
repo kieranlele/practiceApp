@@ -5,6 +5,7 @@ import styles from './styles';
 import { AuthContext } from '../../contexts/Context';
 
 export default function LoginScreen({navigation}) {
+    console.log("We reached the login screen!")
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const {signIn} = useContext(AuthContext);
@@ -14,6 +15,7 @@ export default function LoginScreen({navigation}) {
 
     const onLoginPress = () => {
         signIn(email, password);
+        console.log("we logged in?")
 }
 
     return (
@@ -50,7 +52,9 @@ export default function LoginScreen({navigation}) {
                     <Text style={styles.buttonTitle}>Log in</Text>
                 </TouchableOpacity>
                 <View style={styles.footerView}>
+                    {console.log("We reached the loginScreen text!")}
                     <Text style={styles.footerText}>Don't have an account? <Text onPress={onFooterLinkPress} style={styles.footerLink}>Sign up</Text></Text>
+                    {console.log("Text within text - not a problem")}
                 </View>
             </KeyboardAwareScrollView>
         </View>

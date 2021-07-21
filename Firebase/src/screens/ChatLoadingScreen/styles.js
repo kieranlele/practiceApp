@@ -35,6 +35,14 @@ export default StyleSheet.create({
         alignItems: "center",
         justifyContent: 'center'
     },
+    listButton: {
+        height: 47,
+        borderRadius:5,
+        backgroundColor: '#788eec',
+        width: 160,
+        alignItems: "center",
+        justifyContent: 'center'
+    },
     buttonText: {
         color: 'white',
         fontSize: 16

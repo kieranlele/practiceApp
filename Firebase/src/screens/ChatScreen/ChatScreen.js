@@ -3,7 +3,7 @@ import React, { useContext, useEffect, useState } from 'react'
 import { FlatList, Keyboard, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import styles from './styles';
 import { firebase } from '../../firebase/config'
-import { ChatContext, UserContext } from '../../contexts/Context'; 
+import { UserContext } from '../../contexts/Context'; 
 
 /*
 I don't want to get to fancy with this. I just want to figure out a simple chat implementation.
@@ -94,7 +94,7 @@ return (
                     <Text style={styles.buttonText}>Send</Text>
                 </TouchableOpacity>
             </View>
-              { messages && (
+              { Boolean(messages) && (
                 <View style={styles.listContainer}>
                     <FlatList //neeeded to render each element in the list. We probably could have used a for loop as well. 
                         data={messages}

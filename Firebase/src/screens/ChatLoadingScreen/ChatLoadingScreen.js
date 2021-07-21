@@ -51,9 +51,8 @@ How I want this to work for now:
         const secondConversationRef = conversationRef.where("secondAuthorEmail", "==", userEmail);//These queries check for conversations that involve our user. 
         const conversationRefArray = [firstConversationRef,secondConversationRef]; //more flexible. We can add Refs to the array if ever necessary
     
-        conversationRefArray.forEach(conversations =>{
-
-            conversations
+        conversationRefArray.forEach(conversations =>{ 
+            conversations //currently, this is giving me each conversation twice because firstAuthorEmail and secondAuthorEmail are the same at the moment. 
             .orderBy("lastUpdate","desc")
             .onSnapshot(
             querySnapshot => {  //all of this code is similar to the HomeScreen code. 
@@ -179,8 +178,8 @@ How I want this to work for now:
         const ID = item.id;
         return(
             <View style={styles.entityContainer}>
-                <TouchableOpacity style={styles.button} onPress = {()=>onResumeConversationButtonPress(ID)}> 
-                   <Text style = {styles.buttonText}> {index}. {item.firstAuthorID}, {item.secondAuthorID}</Text>
+                <TouchableOpacity style={styles.listButton} onPress = {()=>onResumeConversationButtonPress(ID)}> 
+                   <Text style = {styles.buttonText}> {index}. {item.firstAuthorEmail}, {item.secondAuthorEmail}</Text>
                 </TouchableOpacity>
             </View>
         )
@@ -188,8 +187,8 @@ How I want this to work for now:
     const renderInvite = ({index,item})=>{ //almost identical to the above. I don't know why I'm using item instead of invite. 
                 return(
             <View style={styles.entityContainer}>
-                <TouchableOpacity style={styles.button} onPress = {()=> onAcceptInviteButtonPress(item.recipientEmail, item.authorEmail)}> 
-                   <Text style = {styles.buttonText}> {index}. {item.authorEmail}, {item.recipientEmail}</Text>
+                <TouchableOpacity style={styles.listButton} onPress = {()=> onAcceptInviteButtonPress(item.recipientEmail, item.authorEmail)}> 
+                   <Text style = {styles.buttonText}> {index}. {item.authorEmail}</Text>
                 </TouchableOpacity>
             </View>
         )
@@ -213,7 +212,7 @@ How I want this to work for now:
         <View style = {styles.container}>
             <View style = {styles.formContainer}>
                 <Text style = {styles.input}>Existing Conversations</Text>
-                { conversations && (
+                { Boolean(conversations) && (
                 <View style={styles.listContainer}>
                     <FlatList //neeeded to render each element in the list. We probably could have used a for loop as well. 
                         data={conversations}
@@ -223,7 +222,7 @@ How I want this to work for now:
                     />
                 </View> )}
                 <Text style = {styles.input}>Pending Invites</Text>
-                { requests && (
+                { Boolean(requests) && ( //BE CAREFUL WITH INLINE CONDITIONAL FORMATTING. Refer to https://koprowski.it/2020/conditional-rendering-react-native-text-crash/
                 <View style={styles.listContainer}>
                     <FlatList //neeeded to render each element in the list. We probably could have used a for loop as well. 
                         data={requests}
@@ -240,7 +239,7 @@ How I want this to work for now:
                     value={invitee}
                     underlineColorAndroid="transparent"
                     autoCapitalize="none"/>
-                <TouchableOpacity style={styles.button} onPress = {()=> onCreateInviteButtonPress}>
+                <TouchableOpacity style={styles.button} onPress = {onCreateInviteButtonPress}>
                     <Text style = {styles.buttonText}>Send Invite</Text>
                 </TouchableOpacity>
             </View>
