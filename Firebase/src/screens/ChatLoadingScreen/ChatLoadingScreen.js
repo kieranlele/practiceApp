@@ -1,6 +1,6 @@
 // imports here
 import React, { useContext, useEffect, useState } from 'react'
-import { FlatList, Text, TextInput, Touchable, TouchableOpacity, View } from 'react-native'
+import { FlatList, Text, TextInput, Touchable, TouchableOpacity, View, Keyboard } from 'react-native'
 import styles from './styles';
 import { firebase } from '../../firebase/config'
 import { ChatContext, UserContext } from '../../contexts/Context.js';
@@ -22,6 +22,7 @@ How I want this to work for now:
     const [conversations, setConversations] = useState([]); //similar to the HomeScreen code
     const [requests, setRequests] = useState([]); //similar to the HomeScreen code
     const [invitee, setInvitee] = useState("") //Invitee being the person invited to chat
+    const [emailExists, setEmailExists] = useState(false);
     const userID = user.id; 
     const userEmail = user.email;
 
@@ -40,9 +41,9 @@ How I want this to work for now:
     const conversationRef = firebase.firestore().collection('Conversations'); //this creates a reference to the Conversations collection
     const firstConversationRef = conversationRef.where("firstAuthorID", "==", userID); //Firestore doesn't have logical OR for queries, so I have to do two separate ones.
     const secondConversationRef = conversationRef.where("secondAuthorID", "==", userID);//These queries check for conversations that involve our user. 
-    let conversationRefArray = [firstConversationRef,secondConversationRef]; //more flexible. We can add Refs to the array if ever necessary
+    let conversationRefArray = [firstConversationRef,secondConversationRef,firstConversationRef]; //more flexible. We can add Refs to the array if ever necessary
     const inviteRef = firebase.firestore().collection('Invites'); // creates a reference to the Invites collection
-    let emailExists = false;
+    
     
 
    useEffect(()=> { //We'll use this to load any existing conversations and invites
@@ -57,18 +58,18 @@ How I want this to work for now:
                      conversation.id = doc.id;
                      newConversations.push(conversation);
                 })
-                 setConversations((prev)=> [...prev, oldConversations]) //spread syntax allows us to update the state with each for loop iteration
+                 setConversations((prev)=> [...prev, ...oldConversations]) //spread syntax allows us to update the state with each for loop iteration
             }, error => {
                 alert(error);
             }
         )});
-        inviteRef.where("recipient", "==", userID) // this does pretty much the same thing as the above, but with invites. 
+        inviteRef//.where("recipient", "==", userEmail) // this does pretty much the same thing as the above, but with invites. 
         .orderBy("createdAt", "desc")
         .onSnapshot(
             querySnapshot => {
               let inviteList = [];
                 querySnapshot.forEach(doc =>{
-                    let invite = doc.data;
+                    const invite = doc.data();
                     invite.id = doc.id;
                     inviteList.push(invite);
                 })
@@ -89,14 +90,16 @@ How I want this to work for now:
    only allows us 50000 reads a day. 
    */
    useEffect(()=>{
-       emailExists = checkEmail(invitee);
+    checkEmail(invitee).then((value)=>setEmailExists(value)); 
    },[invitee]); //whenever invitee changes, we run the checkEmail function (near the bottom of the code). 
                 
    
 
    //We've loaded the possible messages and potential invites we can accept. Let's add methods that create them:
 
-    function onCreateInviteButtonPress(){
+    function onCreateInviteButtonPress(){ //as best as I can tell, I've gotten this to work.
+        
+        alert(emailExists);
         if(emailExists){ //A boolean variable that is modified in the above effect loop with the checkEmail function
             const timestamp = firebase.firestore.FieldValue.serverTimestamp(); 
             const data = {//creates the invite.
@@ -108,14 +111,14 @@ How I want this to work for now:
                 .add(data) //Right now, I'm getting an error with one of the .add calls in this file. 
                 .then(_doc => {
                     setInvitee('') //resets the text entry field for a new entity.
-                    Keyboard.dismiss()
+                    Keyboard.dismiss() //gets rid of the keyboard popup.
                 })
                 .catch((error) => {
                     alert(error)
                 });
         }
         else{
-            alert("Email not found"+invitee);//invitee ensures that the email is not undefined. Mainly for troubleshooting.
+            alert("Email not found: "+invitee);//invitee ensures that the email is not undefined. Mainly for troubleshooting.
         }
    }
 
@@ -129,22 +132,38 @@ How I want this to work for now:
         
         const timestamp = firebase.firestore.FieldValue.serverTimestamp();
         const data = {
-            firstAuthorID: firstUser,
-            secondAuthorID: secondUser,
+            firstAuthorEmail: firstUser,
+            secondAuthorEmail: secondUser,
             lastUpdate: timestamp,
         }
         conversationRef
         .add(data)
-        .then((response)=>{
+        .then((doc)=>{
             const conversationID = doc.id;
+            props.navigation.navigate('Chat Screen', {conversationID: conversationID})
         } )
         .catch((error)=>alert(error))
    
-   props.navigation.navigate('Chat Screen', {conversationID: conversationID}) /*conversationID is included to access the conversation
+      
+   /*conversationID is included to access the conversation
    in the chat screen. I had this idea after I created the chat screen, so I haven't implemented it there yet. One screen at a time.*/
     }
+        /*
+            Erroneous Behavior: 
+                1. The chatloadingscreen starts with 2 conversations without any conversation or author information.
+                    1b. Even if I delete all existing conversations, the problem persists.
+                    2b. The two conversations rendered don't show up in the database though. 
+                    3b. Looping thru the conversationRef arr one more time creates another conversation box.
+                2. The chatloadingscreen immediately redirects to the chatscreen, throwing the alert "something was pressed" twice
+                3. Returning to the chatloading screen causes 2. to happen again. 
+                4. Returning to the chatloading screen again works.
 
+                RESOLVED part 1: The issue was that the [...prev, oldConversations] line in the first useEffect loop added an empty array to the conversations array.
+                         Changing it to [...prev, ...oldConversations] seems to have done the trick.
+        */
     const onResumeConversationButtonPress = (ID) =>{ //same as above function, but with conversations that already exist
+        //for some reason, this code is getting called when it shouldn't be, right at the start of the program.
+        alert("something was pressed?")
         props.navigation.navigate('Chat Screen', {conversationID: ID}); 
     }
 
@@ -152,7 +171,8 @@ How I want this to work for now:
         const ID = item.id;
         return(
             <View style={styles.entityContainer}>
-                <TouchableOpacity style={styles.button} onPress = {onResumeConversationButtonPress(ID)}> 
+                <TouchableOpacity style={styles.button} onPress = {()=>
+                    onResumeConversationButtonPress(ID)}> 
                    <Text style = {styles.buttonText}> {index}. {item.firstAuthorID}, {item.secondAuthorID}</Text>
                 </TouchableOpacity>
             </View>
@@ -161,11 +181,24 @@ How I want this to work for now:
     const renderInvite = ({index,item})=>{ //almost identical to the above. I don't know why I'm using item instead of invite. 
                 return(
             <View style={styles.entityContainer}>
-                <TouchableOpacity style={styles.button} onPress = {onAcceptInviteButtonPress(item.recipientEmail, item.authorEmail)}> 
-                   <Text style = {styles.buttonText}> {index}. {item.authorID}, {item.recipient}</Text>
+                <TouchableOpacity style={styles.button} onPress = {()=> onAcceptInviteButtonPress(item.recipientEmail, item.authorEmail)}> 
+                   <Text style = {styles.buttonText}> {index}. {item.authorEmail}, {item.recipientEmail}</Text>
                 </TouchableOpacity>
             </View>
         )
+    }
+    const  checkEmail = async (email) =>{ //I kind of have this working. I wish I didn't have to create a useEffect loop just for this though.
+        const userRef =  firebase.firestore().collection('users').where("email", "==", email) //max, this should only be one file, so the query shouldn't be too expensive
+        let exists = false;
+        const querySnapshot = await userRef.get();
+        exists = false;
+             querySnapshot.forEach(doc =>{
+                    exists = true;
+                    alert("email exists:" + exists);
+                 // I want to call this outside the snapShot to reset it to false if needed.
+            }, error => {alert(error)}
+        );
+        return exists;
     }
     
 
@@ -200,24 +233,13 @@ How I want this to work for now:
                     value={invitee}
                     underlineColorAndroid="transparent"
                     autoCapitalize="none"/>
-                <TouchableOpacity style={styles.button} onPress = {onCreateInviteButtonPress}>
+                <TouchableOpacity style={styles.button} onPress = {()=> onCreateInviteButtonPress}>
                     <Text style = {styles.buttonText}>Send Invite</Text>
                 </TouchableOpacity>
             </View>
         </View>
     )
+    
 
 }
-const  checkEmail = (email) =>{ //for some reason, exists always evaluates to false. I don't know why.                             //Nevermind. It's not that its evaluating to false. It is because it is asynchronous.
-    let exists = false;
-    const userRef =  firebase.firestore().collection('users').where("email", "==", email) //max, this should only be one file, so the query shouldn't be too expensive
-     userRef.onSnapshot(  
-        querySnapshot =>{
-            querySnapshot.forEach(doc =>{
-                exists = true;
-                alert("Email exists");
-            })
-        }, error => alert(error)
-    );
-    return exists; 
-}
+

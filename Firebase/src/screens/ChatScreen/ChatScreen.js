@@ -45,7 +45,9 @@ useEffect(()=>{
            }
        )
 },[])
-
+    /*
+    Current behavior: A new conversation is created for every new message. That will not do. 
+    */
 const onAddButtonPress =()=>{
     if(messageText && messageText.length > 0){
         const timestamp = firebase.firestore.FieldValue.serverTimestamp();
@@ -70,7 +72,7 @@ const onAddButtonPress =()=>{
 const renderMessage = ({item}) => { //this is called to render each element in the entities list. One thing I want to add
                                     //is an indicator as to who sent which message. I was thinking making user sent messages a different color.
     return (
-        <View style={styles.entityContainer}>
+        <View style={styles.entityContainer}> 
             <Text style={styles.entityText}> 
                  {item.text}
             </Text>
