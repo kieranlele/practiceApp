@@ -38,32 +38,40 @@ How I want this to work for now:
             2b. If she accepts, it creates a new conversation.
             2c. If one already exists, she can chat in it without having to accept again. 
     */
+
+    //TODO: add checks to ensure only 1 invite is created per user pair, that only 1 conversation exists between users, and that invites dissapear when conversations are created.
     const conversationRef = firebase.firestore().collection('Conversations'); //this creates a reference to the Conversations collection
-    const firstConversationRef = conversationRef.where("firstAuthorID", "==", userID); //Firestore doesn't have logical OR for queries, so I have to do two separate ones.
-    const secondConversationRef = conversationRef.where("secondAuthorID", "==", userID);//These queries check for conversations that involve our user. 
-    let conversationRefArray = [firstConversationRef,secondConversationRef,firstConversationRef]; //more flexible. We can add Refs to the array if ever necessary
     const inviteRef = firebase.firestore().collection('Invites'); // creates a reference to the Invites collection
     
     
 
    useEffect(()=> { //We'll use this to load any existing conversations and invites
         //We go through every conversation included in the two Conversations queries above and add their data to an array 
-        conversationRefArray.forEach(conversationRef =>{
-        conversationRef.orderBy("lastUpdated","desc") //ordered by when the conversation was last modified
-        .onSnapshot(
+        const firstConversationRef = conversationRef.where("firstAuthorEmail", "==", userEmail); //Firestore doesn't have logical OR for queries, so I have to do two separate ones.
+        const secondConversationRef = conversationRef.where("secondAuthorEmail", "==", userEmail);//These queries check for conversations that involve our user. 
+        const conversationRefArray = [firstConversationRef,secondConversationRef]; //more flexible. We can add Refs to the array if ever necessary
+    
+        conversationRefArray.forEach(conversations =>{
+
+            conversations
+            .orderBy("lastUpdate","desc")
+            .onSnapshot(
             querySnapshot => {  //all of this code is similar to the HomeScreen code. 
-                let oldConversations = [];
+                const newConversations = [];
                 querySnapshot.forEach(doc => { 
-                     const conversation  = doc.data; 
+                     const conversation  = doc.data(); 
                      conversation.id = doc.id;
                      newConversations.push(conversation);
                 })
-                 setConversations((prev)=> [...prev, ...oldConversations]) //spread syntax allows us to update the state with each for loop iteration
+               // alert(oldConversations.length) //currently, oldConversations has 0 length despite conversations that match our criteria existing.
+                //setConversations(oldConversations);
+                setConversations((prev)=> [...prev, ...newConversations]) //spread syntax allows us to update the state with each for loop iteration
+                 //alert(conversations.length);
             }, error => {
                 alert(error);
             }
         )});
-        inviteRef//.where("recipient", "==", userEmail) // this does pretty much the same thing as the above, but with invites. 
+        inviteRef.where("recipientEmail", "==", userEmail) // this does pretty much the same thing as the above, but with invites. 
         .orderBy("createdAt", "desc")
         .onSnapshot(
             querySnapshot => {
@@ -171,8 +179,7 @@ How I want this to work for now:
         const ID = item.id;
         return(
             <View style={styles.entityContainer}>
-                <TouchableOpacity style={styles.button} onPress = {()=>
-                    onResumeConversationButtonPress(ID)}> 
+                <TouchableOpacity style={styles.button} onPress = {()=>onResumeConversationButtonPress(ID)}> 
                    <Text style = {styles.buttonText}> {index}. {item.firstAuthorID}, {item.secondAuthorID}</Text>
                 </TouchableOpacity>
             </View>
@@ -216,7 +223,7 @@ How I want this to work for now:
                     />
                 </View> )}
                 <Text style = {styles.input}>Pending Invites</Text>
-                { conversations && (
+                { requests && (
                 <View style={styles.listContainer}>
                     <FlatList //neeeded to render each element in the list. We probably could have used a for loop as well. 
                         data={requests}

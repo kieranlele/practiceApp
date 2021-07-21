@@ -30,12 +30,12 @@ const messageRef = conversationRef.doc(route.params.conversationID).collection('
 
 
 useEffect(()=>{
-    messageRef.orderBy('CreatedAt', 'desc') // this section is very similar to HomeScreen's code.
+    messageRef.orderBy('createdAt', 'desc') // this section is very similar to HomeScreen's code.
        .onSnapshot(
            querySnapshot => { 
-               let  newMessages = []
+               const  newMessages = []
                querySnapshot.forEach(doc => { 
-                    let message  = doc.data
+                    const message  = doc.data();
                     message.id = doc.id
                     newMessages.push(message)
                })
@@ -45,10 +45,8 @@ useEffect(()=>{
            }
        )
 },[])
-    /*
-    Current behavior: A new conversation is created for every new message. That will not do. 
-    */
-const onAddButtonPress =()=>{
+   
+const onAddButtonPress =()=>{ //this appears to work.
     if(messageText && messageText.length > 0){
         const timestamp = firebase.firestore.FieldValue.serverTimestamp();
         const data = {
@@ -102,6 +100,7 @@ return (
                         data={messages}
                         renderItem={renderMessage}
                         keyExtractor={(item) => item.id}
+                        scrollEnabled = {true}
                         removeClippedSubviews={true}
                     />
                 </View>
