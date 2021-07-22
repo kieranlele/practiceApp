@@ -43,14 +43,24 @@ export default StyleSheet.create({
         marginTop: 20,
         padding: 20,
     },
-    entityContainer: {
+    userMessageContainer: {
+        marginTop: 16,
+        borderBottomColor: '#80ff80',
+        borderBottomWidth: 1,
+        paddingBottom: 16
+    },
+    messageContainer: {
         marginTop: 16,
         borderBottomColor: '#cccccc',
         borderBottomWidth: 1,
         paddingBottom: 16
     },
-    entityText: {
+    messageText: {
         fontSize: 20,
         color: '#333333'
-    }
+    },
+    userMessageText: {
+        fontSize: 20,
+        color: '#80ff80',
+    },
 })

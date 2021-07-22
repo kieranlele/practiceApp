@@ -15,6 +15,7 @@ export default function HomeScreen(props) {
     //Extra data was passed as an extra prop using screen navigator
     // Apparently, in most cases, it is safer to use React.Context instead. See below.
     const userID = user.id;
+    console.log(user);
 
     useEffect(() => {
         entityRef
@@ -81,14 +82,14 @@ export default function HomeScreen(props) {
                 <TouchableOpacity style={styles.button} onPress={onAddButtonPress}>
                     <Text style={styles.buttonText}>Add</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style = {styles.button} onPress = {signOut}> {/*I'm not sure if the signOut button was in the last commit*/}
+                <TouchableOpacity style = {styles.button} onPress = {signOut}> 
                     <Text style = {styles.buttonText}>Sign Out</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style = {styles.button} onPress = {()=> props.navigation.navigate('ChatLoadingScreen')}> {/*navigates to the new section of code*/}
+                <TouchableOpacity style = {styles.button} onPress = {()=> props.navigation.navigate('ChatLoadingScreen')}> 
                     <Text style = {styles.buttonText}>Go To Chat</Text>
                 </TouchableOpacity>
             </View>
-            { entities && (
+            { Boolean(entities) && (
                 <View style={styles.listContainer}>
                     <FlatList //neeeded to render each element in the list. We probably could have used a for loop as well. 
                         data={entities}

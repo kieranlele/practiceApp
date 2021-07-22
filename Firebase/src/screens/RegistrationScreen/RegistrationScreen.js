@@ -3,7 +3,7 @@ import { Image, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import styles from './styles';
 import { AuthContext } from '../../contexts/Context';
-
+console.log("we made it past the imports?")
 
 export default function RegistrationScreen({navigation,route}) {
     const [fullName, setFullName] = useState('');
@@ -23,6 +23,7 @@ export default function RegistrationScreen({navigation,route}) {
         }
         signUp(fullName, email,password);
     }
+    console.log("we made it to the registration return")
     return (
         <View style={styles.container}>
             <KeyboardAwareScrollView
@@ -75,9 +76,11 @@ export default function RegistrationScreen({navigation,route}) {
                     style={styles.button}
                     onPress={() => onRegisterPress()}>
                     <Text style={styles.buttonTitle}>Create account</Text>
+                    {console.log("we made it to the first registration touchable opacity")}
                 </TouchableOpacity>
                 <View style={styles.footerView}>
                     <Text style={styles.footerText}>Already got an account? <Text onPress={onFooterLinkPress} style={styles.footerLink}>Log in</Text></Text>
+                    {console.log("We made it to the bottom of registration screen")}
                 </View>
             </KeyboardAwareScrollView>
         </View>

@@ -76,31 +76,23 @@ export default function App({ navigation }) {
       }),
       []
     );
-    async function prepare() {
-      try {
-        // Keep the splash screen visible while we fetch resources
-        await SplashScreen.preventAutoHideAsync();
-        console.log("Splashed");
-        await new Promise((resolve=> setTimeout(resolve, 3000)));
-        await SplashScreen.hideAsync();
-        
-      }catch(error){
-        alert(error);
-      }
+    function prepare() {
     const usersRef = firebase.firestore().collection('users'); // defines the Firebase collection that we fetch our data from.
     firebase.auth().onAuthStateChanged(user => {
-      if (user) { //If the user exists and has been defined already. The very first time this code runs, this should be false. 
+      if (user) { //If the user exists and has been defined already. The very first time this code runs, this should be false.
         usersRef
           .doc(user.uid) //I believe this command searches the database using this particular field. 
           .get() //.get returns a promise
           .then((document) => {
             const userData = document.data() // this is an object
+            console.log(userData);
             dispatch({type:'RESTORE_TOKEN'}) //once the data has been received, the screen is no longer loading. A splash screen should be used pre-loading.
             setUser(userData)
           })
           .catch((error) => { 
             dispatch({type:'RESTORE_TOKEN'}) // in the event of an error, just default to the start screen with user still being null
             alert("Error loading user");
+            console.log("Error"+error);
           });
       } else {
         dispatch({type:'RESTORE_TOKEN'}) // defaults to the start screen without having a defined user.
@@ -109,25 +101,24 @@ export default function App({ navigation }) {
     }
     useEffect(() => { prepare()} , []); 
     if(state.loading){
-      return( // the splash screen should be implemented here. Maybe not?
+      return( 
         <View>
           <Image source = {require('./assets/favicon.png')}/> 
         </View>
       )
     };
+
     return (
       //The provider enables us to adjust the state variables of App.js from inside the different screens for the navigator auth-flow.
       <AuthContext.Provider value = {authContext}>
         <UserContext.Provider value = {user}>
-        <ChatContext.Provider> {/*I don't use this, so it is probably safe to delete*/}
          <NavigationContainer>
             <Stack.Navigator>
-                { user ? ( // The below {props} syntax made little sense to me. Refer to https://reactnavigation.org/docs/hello-react-navigation/#passing-additional-props
-                      // Essentially, we just add another prop to be passed along with navigation and route  
+                { Boolean(user) ? ( // The below {props} syntax made little sense to me. Refer to https://reactnavigation.org/docs/hello-react-navigation/#passing-additional-props
+                      // Essentially, we just add another prop to be passed along with navigation and route. It's supposedly better to use context though.
                    <>
                   <Stack.Screen name="Home" component = {HomeScreen}/> 
                   {/* {props => <HomeScreen{...props} extraData={user} />}  </Stack.Screen>  */}
-                   {/*Consider nesting a feed navigator in here */}
                     <Stack.Screen name = "ChatLoadingScreen" component = {ChatLoadingScreen} />
                     <Stack.Screen name = "Chat Screen" component = {ChatScreen} />
                   
@@ -140,8 +131,7 @@ export default function App({ navigation }) {
                  )}
              </Stack.Navigator>
           </NavigationContainer>
-          </ChatContext.Provider>
-        </UserContext.Provider>
+       </UserContext.Provider>
       </AuthContext.Provider>
     );
   }
