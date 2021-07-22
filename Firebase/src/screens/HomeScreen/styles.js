@@ -49,7 +49,7 @@ export default StyleSheet.create({
         borderBottomWidth: 1,
         paddingBottom: 16
     },
-    entityText: {
+    headerText: {
         fontSize: 20,
         color: '#333333'
     }

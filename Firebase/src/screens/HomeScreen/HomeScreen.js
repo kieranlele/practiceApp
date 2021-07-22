@@ -79,7 +79,7 @@ export default function HomeScreen(props) {
                     underlineColorAndroid="transparent"
                     autoCapitalize="none"
                 />
-                <TouchableOpacity style={styles.button} onPress={()=>onAddButtonPress}>
+                <TouchableOpacity style={styles.button} onPress={onAddButtonPress}>
                     <Text style={styles.buttonText}>Add</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style = {styles.button} onPress = {signOut}> 

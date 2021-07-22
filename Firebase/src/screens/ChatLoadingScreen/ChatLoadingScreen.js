@@ -50,21 +50,31 @@ How I want this to work for now:
         const firstConversationRef = conversationRef.where("firstAuthorEmail", "==", userEmail); //Firestore doesn't have logical OR for queries, so I have to do two separate ones.
         const secondConversationRef = conversationRef.where("secondAuthorEmail", "==", userEmail);//These queries check for conversations that involve our user. 
         const conversationRefArray = [firstConversationRef,secondConversationRef]; //more flexible. We can add Refs to the array if ever necessary
-    
         conversationRefArray.forEach(conversations =>{ 
             conversations //currently, this is giving me each conversation twice because firstAuthorEmail and secondAuthorEmail are the same at the moment. 
             .orderBy("lastUpdate","desc")
             .onSnapshot(
             querySnapshot => {  //all of this code is similar to the HomeScreen code. 
-                const newConversations = [];
+                let newConversations = [];
                 querySnapshot.forEach(doc => { 
                      const conversation  = doc.data(); 
                      conversation.id = doc.id;
+                     const checkId=(identification, array)=>{
+                         const contains = false;
+                         array.forEach((document)=>{
+                             if(document.id == identification){
+                                 contains = true;
+                             }      
+                         })
+                         return contains;
+                     }
+                     if(!checkId(conversation.id, newConversations) === true){
                      newConversations.push(conversation);
+                     }
                 })
                // alert(oldConversations.length) //currently, oldConversations has 0 length despite conversations that match our criteria existing.
                 //setConversations(oldConversations);
-                setConversations((prev)=> [...prev, ...newConversations]) //spread syntax allows us to update the state with each for loop iteration
+                setConversations(newConversations) //spread syntax allows us to update the state with each for loop iteration
                  //alert(conversations.length);
             }, error => {
                 alert(error);
@@ -134,22 +144,30 @@ How I want this to work for now:
    How do I update the timestamp when they get modified? 
    I think the details will become clearer as I work with this. 
    */
-   const onAcceptInviteButtonPress = (firstUser, secondUser) =>{ //code for accepting invites handler function
+   const onAcceptInviteButtonPress = (inviteData) =>{ //code for accepting invites handler function
         //first, we create a conversation with the two users 
-        
+        const firstUser = inviteData.recipientEmail;
+        const secondUser = inviteData.authorEmail;
+        const inviteID = inviteData.id;
+
         const timestamp = firebase.firestore.FieldValue.serverTimestamp();
         const data = {
             firstAuthorEmail: firstUser,
             secondAuthorEmail: secondUser,
             lastUpdate: timestamp,
+            metadata: {
+                inviteID: inviteID //the doc id of the invite this conversation is made from
+            } 
         }
         conversationRef
         .add(data)
         .then((doc)=>{
             const conversationID = doc.id;
             props.navigation.navigate('Chat Screen', {conversationID: conversationID})
+            inviteRef.doc(inviteID).delete();
         } )
-        .catch((error)=>alert(error))
+        .catch((error)=>alert(error)) //4,12,24,40,60
+                                      //0, 1, 2, 3, 4
    
       
    /*conversationID is included to access the conversation
@@ -177,18 +195,18 @@ How I want this to work for now:
     const renderConversation = ({index,item})=>{ // I need to fix formating. TouchableOpacity makes each element in the list a button 
         const ID = item.id;
         return(
-            <View style={styles.entityContainer}>
+            <View style={styles.conversationContainer}>
                 <TouchableOpacity style={styles.listButton} onPress = {()=>onResumeConversationButtonPress(ID)}> 
-                   <Text style = {styles.buttonText}> {index}. {item.firstAuthorEmail}, {item.secondAuthorEmail}</Text>
+                   <Text style = {styles.converstaionText}> {index}. {item.firstAuthorEmail}, {item.secondAuthorEmail}</Text>
                 </TouchableOpacity>
             </View>
         )
     }
     const renderInvite = ({index,item})=>{ //almost identical to the above. I don't know why I'm using item instead of invite. 
                 return(
-            <View style={styles.entityContainer}>
-                <TouchableOpacity style={styles.listButton} onPress = {()=> onAcceptInviteButtonPress(item.recipientEmail, item.authorEmail)}> 
-                   <Text style = {styles.buttonText}> {index}. {item.authorEmail}</Text>
+            <View style={styles.conversationContainer}>
+                <TouchableOpacity style={styles.listButton} onPress = {()=> onAcceptInviteButtonPress(item)}> 
+                   <Text style = {styles.conversationText}> {index}. {item.authorEmail}</Text>
                 </TouchableOpacity>
             </View>
         )
@@ -211,37 +229,44 @@ How I want this to work for now:
    return (
         <View style = {styles.container}>
             <View style = {styles.formContainer}>
-                <Text style = {styles.input}>Existing Conversations</Text>
-                { Boolean(conversations) && (
-                <View style={styles.listContainer}>
-                    <FlatList //neeeded to render each element in the list. We probably could have used a for loop as well. 
+                <View style = {styles.columnContainer}>
+                    <Text style = {styles.headerText}>Existing Conversations</Text>
+                
+                    { Boolean(conversations) && (
+                    <View style={styles.listContainer}>
+                         <FlatList //neeeded to render each element in the list. We probably could have used a for loop as well. 
                         data={conversations}
                         renderItem={renderConversation}
                         keyExtractor={(item) => item.id}
                         removeClippedSubviews={true}
-                    />
-                </View> )}
-                <Text style = {styles.input}>Pending Invites</Text>
-                { Boolean(requests) && ( //BE CAREFUL WITH INLINE CONDITIONAL FORMATTING. Refer to https://koprowski.it/2020/conditional-rendering-react-native-text-crash/
-                <View style={styles.listContainer}>
-                    <FlatList //neeeded to render each element in the list. We probably could have used a for loop as well. 
+                     />
+                     </View> )}
+                </View>
+                <View style = {styles.columnContainer}>
+                    <Text style = {styles.headerText}>Pending Invites</Text>
+                    { Boolean(requests) && ( //BE CAREFUL WITH INLINE CONDITIONAL FORMATTING. Refer to https://koprowski.it/2020/conditional-rendering-react-native-text-crash/
+                    <View style={styles.listContainer}>
+                      <FlatList //neeeded to render each element in the list. We probably could have used a for loop as well. 
                         data={requests}
                         renderItem={renderInvite}
                         keyExtractor={(item) => item.id}
                         removeClippedSubviews={true}
-                    />
-                </View> )}
-                <Text style = {styles.input}>Create Invite</Text>
-                <TextInput style={styles.input}
-                    placeholder='Add new entity'
-                    placeholderTextColor="#aaaaaa"
-                    onChangeText={(text) => setInvitee(text)}
-                    value={invitee}
-                    underlineColorAndroid="transparent"
-                    autoCapitalize="none"/>
-                <TouchableOpacity style={styles.button} onPress = {onCreateInviteButtonPress}>
-                    <Text style = {styles.buttonText}>Send Invite</Text>
-                </TouchableOpacity>
+                      />
+                    </View> )}
+                 </View>
+                <View style = {styles.columnContainer}>
+                    <Text style = {styles.headerText}>Create Invite</Text>
+                    <TextInput style={styles.input}
+                        placeholder='Add new entity'
+                        placeholderTextColor="#aaaaaa"
+                        onChangeText={(text) => setInvitee(text)}
+                        value={invitee}
+                        underlineColorAndroid="transparent"
+                        autoCapitalize="none"/>
+                    <TouchableOpacity style={styles.button} onPress = {onCreateInviteButtonPress}>
+                        <Text style = {styles.buttonText}>Send Invite</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
         </View>
     )

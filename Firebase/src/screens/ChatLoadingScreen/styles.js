@@ -16,10 +16,10 @@ export default StyleSheet.create({
         paddingLeft: 30,
         paddingRight: 30,
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'flex-start'
     },
     input: {
-        height: 48,
+        height: 20,
         borderRadius: 5,
         overflow: 'hidden',
         backgroundColor: 'white',
@@ -28,37 +28,45 @@ export default StyleSheet.create({
         marginRight: 5
     },
     button: {
-        height: 47,
+        height: 20,
         borderRadius: 5,
         backgroundColor: '#788eec',
-        width: 80,
+        flex: 1,
         alignItems: "center",
         justifyContent: 'center'
     },
     listButton: {
-        height: 47,
+        height: 20,
         borderRadius:5,
         backgroundColor: '#788eec',
-        width: 160,
+        flex: 1,
         alignItems: "center",
         justifyContent: 'center'
     },
     buttonText: {
         color: 'white',
-        fontSize: 16
     },
-    listContainer: {
+    listContainer: { //holds the list
         marginTop: 20,
         padding: 20,
     },
-    conversationContainer: {
+    columnContainer:{ // each column container holds a column
+        flex: 1,
+        flexDirection: "column",
+    },
+    conversationContainer: { // used to contain the list entries
         marginTop: 16,
         borderBottomColor: '#cccccc',
         borderBottomWidth: 1,
         paddingBottom: 16
     },
-    conversationText: {
-        fontSize: 20,
+    conversationText: { //list entry text
         color: '#333333'
     },
+    headerText: {
+        padding:20,
+        color: "#333333",
+        fontSize: 30
+    }
 })
+//container -> formContainer -> columnContainer => listContainer -> listButton/button
