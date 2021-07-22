@@ -3,7 +3,7 @@ import React, { useContext, useEffect, useState } from 'react'
 import { FlatList, Text, TextInput, Touchable, TouchableOpacity, View, Keyboard } from 'react-native'
 import styles from './styles';
 import { firebase } from '../../firebase/config'
-import { ChatContext, UserContext } from '../../contexts/Context.js';
+import { UserContext } from '../../contexts/Context.js';
 /*
 How I want this to work for now:
     1. Bob requests to chat with Alice
@@ -39,10 +39,10 @@ How I want this to work for now:
             2c. If one already exists, she can chat in it without having to accept again. 
     */
 
-    //TODO: add checks to ensure only 1 invite is created per user pair, that only 1 conversation exists between users, and that invites dissapear when conversations are created.
+    //TODO: add checks to ensure only 1 invite is created per user pair, that only 1 conversation exists between users
     const conversationRef = firebase.firestore().collection('Conversations'); //this creates a reference to the Conversations collection
     const inviteRef = firebase.firestore().collection('Invites'); // creates a reference to the Invites collection
-    
+    const userRef = firebase.firestore().collection('users').doc(userID); // creates a reference to the user's document
     
 
    useEffect(()=> { //We'll use this to load any existing conversations and invites
@@ -115,8 +115,6 @@ How I want this to work for now:
    //We've loaded the possible messages and potential invites we can accept. Let's add methods that create them:
 
     function onCreateInviteButtonPress(){ //as best as I can tell, I've gotten this to work.
-        
-        alert(emailExists);
         if(emailExists){ //A boolean variable that is modified in the above effect loop with the checkEmail function
             const timestamp = firebase.firestore.FieldValue.serverTimestamp(); 
             const data = {//creates the invite.
@@ -127,6 +125,8 @@ How I want this to work for now:
             inviteRef //adds our invite to the collection. 
                 .add(data) //Right now, I'm getting an error with one of the .add calls in this file. 
                 .then(_doc => {
+                    userRef.collection('chatPartners').add({partner: invitee, status: "invite"}).catch((error)=>console.log(error)); //it may make sense to store the list of partners in a single doc.
+                    //I think that you can do that with the json fileDatabase that firebase provides. 
                     setInvitee('') //resets the text entry field for a new entity.
                     Keyboard.dismiss() //gets rid of the keyboard popup.
                 })
@@ -162,12 +162,13 @@ How I want this to work for now:
         conversationRef
         .add(data)
         .then((doc)=>{
+            userRef.collection('chatPartners').add({partner: secondUser, status: "converse"}).catch((error)=>console.log(error));
             const conversationID = doc.id;
             props.navigation.navigate('Chat Screen', {conversationID: conversationID})
             inviteRef.doc(inviteID).delete();
         } )
-        .catch((error)=>alert(error)) //4,12,24,40,60
-                                      //0, 1, 2, 3, 4
+        .catch((error)=>alert(error)) //
+                                      
    
       
    /*conversationID is included to access the conversation
@@ -218,7 +219,7 @@ How I want this to work for now:
         exists = false;
              querySnapshot.forEach(doc =>{
                     exists = true;
-                    alert("email exists:" + exists);
+                    //alert("email exists:" + exists);
                  // I want to call this outside the snapShot to reset it to false if needed.
             }, error => {alert(error)}
         );

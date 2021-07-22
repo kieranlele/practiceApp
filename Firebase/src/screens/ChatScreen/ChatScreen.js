@@ -70,8 +70,8 @@ const onAddButtonPress =()=>{ //this appears to work.
 const renderMessage = ({item}) => { //this is called to render each element in the entities list. One thing I want to add
                                     //is an indicator as to who sent which message. I was thinking making user sent messages a different color.
     return (
-        <View style={styles.entityContainer}> 
-            <Text style={styles.entityText}> 
+        <View style={Boolean(user.id===item.authorID) ? styles.userMessageContainer: styles.messageContainer}> 
+            <Text style={Boolean(user.id===item.authorID) ? styles.userMessageText: styles.messageText}> 
                  {item.text}
             </Text>
         </View>
